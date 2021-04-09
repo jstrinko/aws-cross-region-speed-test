@@ -1,0 +1,15 @@
+{
+	"name": "AWS Cross Region Speed Test",
+	"version": "1.0.0",
+	"description": "AWS Cross region speed test between EC2 instances",
+	"main": "index.js",
+	"dependencies": {
+		"aws-sdk": "^2.882.0",
+		"node-scp": "0.0.14"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jstrinko/aws-cross-region-speed-test.git"
+	},
+	"license": "MIT"
+}
