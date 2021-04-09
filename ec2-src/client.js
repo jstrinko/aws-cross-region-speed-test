@@ -49,8 +49,14 @@ const fetch = (host) => {
 	});
 };
 
-Object.keys(hosts).reduce((aggregate, host) => {
-	return aggregate.then(() => {
-		fetch(host);
-	});
-}, Promise.resolve());
+const ping_em = () => {
+	Object.keys(hosts).reduce((aggregate, host) => {
+		return aggregate.then(() => {
+			fetch(host);
+		});
+	}, Promise.resolve())
+		.then(() => {
+			setTimeout(ping_em, 5000);
+};
+
+ping_em();

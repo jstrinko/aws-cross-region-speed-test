@@ -1,5 +1,5 @@
 {
-	"name": "AWS Cross Region Speed Test",
+	"name": "AWS-Cross-Region-Speed-Test",
 	"version": "1.0.0",
 	"description": "AWS Cross region speed test between EC2 instances",
 	"main": "index.js",
