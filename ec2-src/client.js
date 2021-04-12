@@ -5,7 +5,7 @@ const hosts = require('./hosts.json');
 const port = 3000;
 let request_id = 0;
 
-const fetch = (host) => {
+const fetch = (region, host) => {
 	return new Promise((resolve, reject) => {
 		request_id++;
 		const start = Date.now();
@@ -17,24 +17,30 @@ const fetch = (host) => {
 					type: 'response-error',
 					time_to_fail: Date.now() - start,
 					request_id,
+					region,
+					host,
+					port,
 					error
 				}));
 				return resolve();
 			});
-		});
-		req.on('data', (data) => {
-			if (!time_to_first_byte) {
-				time_to_first_byte = Date.now() - start;
-			}
-		});
-		req.on('end', () => {
-			console.log(JSON.stringify({
-				status: 'success',
-				total_time: Date.now() - start,
-				time_to_first_byte,
-				request_id
-			}));
-			return resolve();
+			res.on('data', (data) => {
+				if (!time_to_first_byte) {
+					time_to_first_byte = Date.now() - start;
+				}
+			});
+			res.on('end', () => {
+				console.log(JSON.stringify({
+					status: 'success',
+					total_time: Date.now() - start,
+					time_to_first_byte,
+					region,
+					host,
+					port,
+					request_id
+				}));
+				return resolve();
+			});
 		});
 		req.on('error', (error) => {
 			console.log(JSON.stringify({
@@ -42,21 +48,29 @@ const fetch = (host) => {
 				type: 'request-error',
 				time_to_fail: Date.now() - start,
 				request_id,
+				region,
+				host,
+				port,
 				error
 			}));
 			return resolve();
 		});
+		req.end();
 	});
 };
 
 const ping_em = () => {
-	Object.keys(hosts).reduce((aggregate, host) => {
-		return aggregate.then(() => {
-			fetch(host);
-		});
-	}, Promise.resolve())
-		.then(() => {
-			setTimeout(ping_em, 5000);
+	return new Promise((resolve, reject) => {
+		Object.keys(hosts).reduce((aggregate, region) => {
+			return aggregate.then(() => {
+				return fetch(region, hosts[region]);
+			});
+		}, Promise.resolve())
+			.then(() => {
+				setTimeout(ping_em, 5000);
+			});
+	});
 };
 
 ping_em();
+setInterval(() => { }, 5000); // keepalive
