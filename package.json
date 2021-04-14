@@ -5,7 +5,9 @@
 	"main": "index.js",
 	"dependencies": {
 		"aws-sdk": "^2.882.0",
-		"node-scp": "0.0.14"
+		"node-scp": "0.0.14",
+		"ping": "^0.4.1",
+		"table": "^6.1.0"
 	},
 	"repository": {
 		"type": "git",

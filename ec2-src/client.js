@@ -1,28 +1,23 @@
 'use strict';
 
 const http = require('http');
+const ping = require('ping');
 const hosts = require('./hosts.json');
 const port = 3000;
 let request_id = 0;
 
-const fetch = (region, host) => {
+const fetch = (host) => {
 	return new Promise((resolve, reject) => {
-		request_id++;
 		const start = Date.now();
 		let time_to_first_byte;
 		const req = http.get(`http://${host}:${port}/test`, (res) => {
 			res.on('error', (error) => {
-				console.log(JSON.stringify({
-					status: 'fail',
-					type: 'response-error',
+				return resolve({
+					success: false,
+					failure_type: 'response-error',
 					time_to_fail: Date.now() - start,
-					request_id,
-					region,
-					host,
-					port,
 					error
-				}));
-				return resolve();
+				});
 			});
 			res.on('data', (data) => {
 				if (!time_to_first_byte) {
@@ -30,40 +25,51 @@ const fetch = (region, host) => {
 				}
 			});
 			res.on('end', () => {
-				console.log(JSON.stringify({
-					status: 'success',
+				return resolve({
+					success: true,
 					total_time: Date.now() - start,
-					time_to_first_byte,
-					region,
-					host,
-					port,
-					request_id
-				}));
-				return resolve();
+					time_to_first_byte
+				});
 			});
 		});
 		req.on('error', (error) => {
-			console.log(JSON.stringify({
-				status: 'fail',
-				type: 'request-error',
+			return resolve({
+				success: false,
+				failure_type: 'request-error',
 				time_to_fail: Date.now() - start,
-				request_id,
-				region,
-				host,
-				port,
 				error
-			}));
-			return resolve();
+			});
 		});
 		req.end();
 	});
+};
+
+const do_ping = (region, host, http_result) => {
+	return ping.promise.probe(host)
+		.then((response) => {
+			return {
+				http: http_result,
+				ping: {
+					time: response.avg,
+					success: response.alive
+				},
+				region,
+				host
+			};
+		});
+};
+
+const report = (result) => {
+	console.log(JSON.stringify(result));
 };
 
 const ping_em = () => {
 	return new Promise((resolve, reject) => {
 		Object.keys(hosts).reduce((aggregate, region) => {
 			return aggregate.then(() => {
-				return fetch(region, hosts[region]);
+				return fetch(hosts[region])
+					.then(do_ping.bind(null, region, hosts[region]))
+					.then(report);
 			});
 		}, Promise.resolve())
 			.then(() => {
@@ -71,6 +77,5 @@ const ping_em = () => {
 			});
 	});
 };
-
 ping_em();
 setInterval(() => { }, 5000); // keepalive

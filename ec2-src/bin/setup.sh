@@ -8,6 +8,8 @@ nvm install node
 export NODE_PATH=~/.nvm/versions/node/v15.14.0/lib/node_modules/
 echo "INSTALLING EXPRESS"
 npm install -g express
+echo "INSTALLING PING"
+npm install -g ping
 killall node
 echo "STARTING SERVER"
 node ~/server.js > ~/server-output.log 2>&1 &
